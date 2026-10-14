@@ -1,0 +1,39 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #20251f;
+  background: #f7f8f4;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+.app {
+  width: min(100% - 32px, 1000px);
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.eyebrow {
+  color: #55734b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+h1 { font-size: clamp(36px, 8vw, 56px); }
+
+.welcome {
+  margin-top: 24px;
+  padding: 28px;
+  border: 1px solid #e1e5dc;
+  border-radius: 20px;
+  background: white;
+  line-height: 1.7;
+}
+
+.status { color: #55734b; font-weight: 600; }
