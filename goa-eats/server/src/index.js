@@ -6,6 +6,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import { extractUrl, normalizeLink } from './links.js'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 3001
@@ -13,6 +14,7 @@ const PORT = Number(process.env.PORT) || 3001
 const currentFile = fileURLToPath(import.meta.url)
 const currentDirectory = path.dirname(currentFile)
 const DATA_FILE = path.resolve(currentDirectory, '../data/restaurants.json')
+const LINKS_FILE = path.resolve(currentDirectory, '../data/links.json')
 
 app.use(cors())
 app.use(express.json({ limit: '1mb' }))
@@ -55,6 +57,14 @@ function readRestaurants() {
 
 function updateRestaurants(update) {
   return updateJsonFile(DATA_FILE, update)
+}
+
+function readLinks() {
+  return readJsonFile(LINKS_FILE)
+}
+
+function updateLinks(update) {
+  return updateJsonFile(LINKS_FILE, update)
 }
 
 app.get('/api/health', (_req, res) => {
@@ -170,6 +180,90 @@ app.delete('/api/restaurants/:id', async (req, res) => {
   } catch (error) {
     console.error('Could not delete restaurant:', error)
     res.status(500).json({ error: 'Could not delete restaurant.' })
+  }
+})
+
+app.get('/api/links', async (_req, res) => {
+  try {
+    const links = await readLinks()
+    links.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    res.json(links)
+  } catch (error) {
+    console.error('Could not read links:', error)
+    res.status(500).json({ error: 'Could not load links.' })
+  }
+})
+
+app.post('/api/links', async (req, res) => {
+  const input = req.body ?? {}
+  const rawUrl = extractUrl(input.url)
+
+  if (!rawUrl) {
+    return res.status(400).json({ error: 'Please provide a valid http or https link.' })
+  }
+
+  const normalized = normalizeLink(rawUrl)
+  if (!normalized) {
+    return res.status(400).json({ error: 'Please provide a valid http or https link.' })
+  }
+
+  if (input.note !== undefined && typeof input.note !== 'string') {
+    return res.status(400).json({ error: 'note must be text.' })
+  }
+
+  const note = input.note?.trim().slice(0, 1000) || undefined
+
+  try {
+    let link
+    let duplicate = false
+
+    // The duplicate check runs inside the queue so two devices sharing
+    // the same link at the same moment still produce a single record.
+    await updateLinks((links) => {
+      const existing = links.find((item) => item.url === normalized.url)
+
+      if (existing) {
+        link = existing
+        duplicate = true
+        return links
+      }
+
+      link = {
+        id: randomUUID(),
+        url: normalized.url,
+        platform: normalized.platform,
+        status: 'new',
+        note,
+        createdAt: new Date().toISOString(),
+      }
+      return [...links, link]
+    })
+
+    res.status(duplicate ? 200 : 201).json({ ...link, duplicate })
+  } catch (error) {
+    console.error('Could not save link:', error)
+    res.status(500).json({ error: 'Could not save link.' })
+  }
+})
+
+app.delete('/api/links/:id', async (req, res) => {
+  try {
+    let found = false
+
+    await updateLinks((links) => {
+      const remaining = links.filter((item) => item.id !== req.params.id)
+      found = remaining.length !== links.length
+      return remaining
+    })
+
+    if (!found) {
+      return res.status(404).json({ error: 'Link not found.' })
+    }
+
+    res.status(204).end()
+  } catch (error) {
+    console.error('Could not delete link:', error)
+    res.status(500).json({ error: 'Could not delete link.' })
   }
 })
 
