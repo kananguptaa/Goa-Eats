@@ -8,3 +8,6 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
+# Personal data and backups stay out of git
+server/data/*.json
+*.tsbuildinfo
