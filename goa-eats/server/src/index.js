@@ -2,7 +2,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
@@ -17,13 +17,44 @@ const DATA_FILE = path.resolve(currentDirectory, '../data/restaurants.json')
 app.use(cors())
 app.use(express.json({ limit: '1mb' }))
 
-async function readRestaurants() {
-  const contents = await readFile(DATA_FILE, 'utf8')
-  return JSON.parse(contents)
+// Reads a JSON array file. A missing file is treated as an empty list.
+async function readJsonFile(file) {
+  try {
+    return JSON.parse(await readFile(file, 'utf8'))
+  } catch (error) {
+    if (error?.code === 'ENOENT') return []
+    throw error
+  }
 }
 
-async function writeRestaurants(restaurants) {
-  await writeFile(DATA_FILE, JSON.stringify(restaurants, null, 2), 'utf8')
+// Writes to a temporary file first, then renames it over the real one,
+// so a crash mid-write never leaves a half-written JSON file.
+async function writeJsonFile(file, data) {
+  await mkdir(path.dirname(file), { recursive: true })
+  const tempFile = `${file}.${randomUUID()}.tmp`
+  await writeFile(tempFile, JSON.stringify(data, null, 2), 'utf8')
+  await rename(tempFile, file)
+}
+
+// All read-modify-write operations run one at a time, so two requests
+// arriving together cannot overwrite each other's changes.
+let writeQueue = Promise.resolve()
+
+function updateJsonFile(file, update) {
+  const task = writeQueue.then(async () => {
+    const updated = await update(await readJsonFile(file))
+    await writeJsonFile(file, updated)
+  })
+  writeQueue = task.catch(() => {})
+  return task
+}
+
+function readRestaurants() {
+  return readJsonFile(DATA_FILE)
+}
+
+function updateRestaurants(update) {
+  return updateJsonFile(DATA_FILE, update)
 }
 
 app.get('/api/health', (_req, res) => {
@@ -98,8 +129,6 @@ app.post('/api/restaurants', async (req, res) => {
   }
 
   try {
-    const restaurants = await readRestaurants()
-
     const restaurant = {
       id: randomUUID(),
       name: input.name.trim(),
@@ -114,8 +143,7 @@ app.post('/api/restaurants', async (req, res) => {
       verified: false,
     }
 
-    restaurants.push(restaurant)
-    await writeRestaurants(restaurants)
+    await updateRestaurants((restaurants) => [...restaurants, restaurant])
 
     res.status(201).json(restaurant)
   } catch (error) {
@@ -126,14 +154,18 @@ app.post('/api/restaurants', async (req, res) => {
 
 app.delete('/api/restaurants/:id', async (req, res) => {
   try {
-    const restaurants = await readRestaurants()
-    const remaining = restaurants.filter((item) => item.id !== req.params.id)
+    let found = false
 
-    if (remaining.length === restaurants.length) {
+    await updateRestaurants((restaurants) => {
+      const remaining = restaurants.filter((item) => item.id !== req.params.id)
+      found = remaining.length !== restaurants.length
+      return remaining
+    })
+
+    if (!found) {
       return res.status(404).json({ error: 'Restaurant not found.' })
     }
 
-    await writeRestaurants(remaining)
     res.status(204).end()
   } catch (error) {
     console.error('Could not delete restaurant:', error)
