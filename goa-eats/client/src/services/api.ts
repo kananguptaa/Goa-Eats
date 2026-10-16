@@ -1,5 +1,6 @@
 
 import type { Restaurant, RestaurantInput } from '../types/restaurant'
+import type { SharedLink, SharedLinkResult } from '../types/link'
 
 const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3001/api`
 
@@ -48,6 +49,23 @@ export function createSharedRestaurant(
 
 export function deleteSharedRestaurant(id: string): Promise<void> {
   return request<void>(`/restaurants/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  })
+}
+
+export function getLinks(): Promise<SharedLink[]> {
+  return request<SharedLink[]>('/links')
+}
+
+export function createLink(url: string): Promise<SharedLinkResult> {
+  return request<SharedLinkResult>('/links', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  })
+}
+
+export function deleteLink(id: string): Promise<void> {
+  return request<void>(`/links/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
 }

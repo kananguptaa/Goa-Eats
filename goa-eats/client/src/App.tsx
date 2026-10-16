@@ -5,11 +5,13 @@ import {
   getSharedRestaurants,
   deleteSharedRestaurant,
 } from './services/api'
+import ShareInbox from './components/ShareInbox'
 
-type Screen = 'map' | 'saved' | 'add' | 'settings'
+type Screen = 'map' | 'share' | 'saved' | 'add' | 'settings'
 
 const screens: { id: Screen; label: string; icon: string }[] = [
   { id: 'map', label: 'Map', icon: '⌖' },
+  { id: 'share', label: 'Share', icon: '↗' },
   { id: 'saved', label: 'Saved Places', icon: '♡' },
   { id: 'add', label: 'Add Place', icon: '+' },
   { id: 'settings', label: 'Settings', icon: '⚙' },
@@ -96,6 +98,8 @@ function App() {
               </button>
             </div>
           )}
+
+          {activeScreen === 'share' && <ShareInbox />}
 
           {activeScreen === 'saved' && (
   <SavedPlaces

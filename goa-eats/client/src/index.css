@@ -256,6 +256,191 @@ button {
   display: none;
 }
 
+/* Share tab */
+
+.share-inbox {
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.share-card h2 {
+  margin-top: 0;
+}
+
+.share-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.share-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid #d9dfd3;
+  border-radius: 10px;
+  background: #fbfcfa;
+  color: inherit;
+  /* 16px stops iPhone Safari from zooming in on focus. */
+  font: inherit;
+  font-size: 16px;
+}
+
+.share-form input:focus {
+  outline: 2px solid #9dbb8f;
+  outline-offset: 1px;
+  border-color: #9dbb8f;
+}
+
+.share-form .primary-button {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.primary-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.placeholder-card .share-message {
+  margin: 14px 0 0;
+  color: #3e6437;
+  font-weight: 600;
+}
+
+.inbox-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 30px 4px 12px;
+}
+
+.inbox-heading h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.inbox-heading span {
+  color: #81887c;
+  font-size: 13px;
+}
+
+.inbox-heading .text-button {
+  margin-left: auto;
+}
+
+.text-button {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #456b3e;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  background: #edf3e7;
+}
+
+.text-button.danger {
+  color: #a24a3d;
+}
+
+.text-button.danger:hover {
+  background: #f8ebe8;
+}
+
+.share-error {
+  color: #a24a3d;
+}
+
+.inbox-empty {
+  margin: 0 4px;
+  color: #81887c;
+  font-size: 14px;
+}
+
+.link-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 14px 16px;
+  border: 1px solid #e4e8df;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.link-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.link-details a {
+  display: block;
+  overflow: hidden;
+  color: #263128;
+  font-weight: 600;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-details a:hover {
+  text-decoration: underline;
+}
+
+.link-details small {
+  display: block;
+  margin-top: 4px;
+  color: #81887c;
+  font-size: 12px;
+}
+
+.platform-badge {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.platform-instagram {
+  background: #f9e8ef;
+  color: #9c3462;
+}
+
+.platform-youtube {
+  background: #fbe9e7;
+  color: #a5352a;
+}
+
+.platform-other {
+  background: #edf0ea;
+  color: #5d6858;
+}
+
+@media (max-width: 700px) {
+  .share-form {
+    flex-direction: column;
+  }
+
+  .link-item {
+    gap: 10px;
+    padding: 12px;
+  }
+}
+
 @media (max-width: 700px) {
   .sidebar {
     display: none;
@@ -285,7 +470,7 @@ button {
     position: fixed;
     inset: auto 0 0;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 2px;
     padding: 9px 5px max(9px, env(safe-area-inset-bottom));
     background: #fff;
